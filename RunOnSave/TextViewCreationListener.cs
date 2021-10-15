@@ -19,11 +19,13 @@ namespace RunOnSave
     [ContentType("Any")]
     [Name("run on save text view handler")]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
-    internal class TextViewCreationListener : IVsTextViewCreationListener
+    public sealed class TextViewCreationListener : IVsTextViewCreationListener
     {
-        private ITextDocument _document;
+        private ITextDocument document;
         private ITextSnapshot previousSnapshot;
-        private CommandConfiguration command;
+        private CommandTemplate command;
+
+        public IInputOutput IO { get; set; } = new InputOutput(); // facade for indirecting hard-to-test IO.
 
         [Import] public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService { get; set; }
         [Import] public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
@@ -31,43 +33,44 @@ namespace RunOnSave
         public void VsTextViewCreated(IVsTextView textViewAdapter)
         {
             var textView = EditorAdaptersFactoryService.GetWpfTextView(textViewAdapter);
+            textView.Closed += TextViewClosed;
 
-            if (TextDocumentFactoryService.TryGetTextDocument(textView.TextDataModel.DocumentBuffer, out _document))
+            if (!TextDocumentFactoryService.TryGetTextDocument(textView.TextDataModel.DocumentBuffer, out this.document))
             {
-                ThreadPool.QueueUserWorkItem(_ =>
-                {
-                    var fileConfiguration = new EditorConfigParser(CommandConfiguration.FileName).Parse(_document.FilePath);
-
-                    if (fileConfiguration is null || fileConfiguration.Properties.Count == 0)
-                    {
-                        return;
-                    }
-
-                    if(!CommandConfiguration.TryParse(fileConfiguration, out var command))
-                    {
-                        Logger.Log($"{CommandConfiguration.FileName} found, but invalid for this file. Skipping.");
-                        return;
-                    }
-
-                    if (command.ShouldIgnore)
-                    {
-                        return;
-                    }
-
-                    this.command = command;
-                    _document.FileActionOccurred += DocumentSaved;
-                });
+                return;
             }
 
-            textView.Closed += TextViewClosed;
+            IO.QueueUserWorkItem(_ =>
+            {
+                var configProperties = IO.ReadConfigFile(document.FilePath);
+
+                if (configProperties is null || configProperties.Count == 0)
+                {
+                    return;
+                }
+
+                if (!CommandTemplate.TryParse(configProperties, out var cmd))
+                {
+                    Logger.Log($"{CommandTemplate.FileName} found, but invalid for this file. Skipping.");
+                    return;
+                }
+
+                if (cmd.ShouldIgnore)
+                {
+                    return;
+                }
+
+                this.command = cmd;
+                this.document.FileActionOccurred += DocumentSaved;
+            });
+
         }
-        
 
         private void TextViewClosed(object sender, EventArgs e)
         {
-            if(_document != null)
+            if(this.document != null)
             {
-                _document.FileActionOccurred -= DocumentSaved;
+                this.document.FileActionOccurred -= DocumentSaved;
             }
 
             if (sender is IWpfTextView textView)
@@ -86,19 +89,19 @@ namespace RunOnSave
                 return;
 
             // don't bother reformatting if the file hasn't been changed.
-            if (previousSnapshot == _document.TextBuffer.CurrentSnapshot)
+            if (previousSnapshot == this.document.TextBuffer.CurrentSnapshot)
             {
                 Logger.Log("Skipping formatting -- file not changed");
                 return;
             }
 
-            previousSnapshot = _document.TextBuffer.CurrentSnapshot;
+            this.previousSnapshot = this.document.TextBuffer.CurrentSnapshot;
 
-            ThreadPool.QueueUserWorkItem(_ =>
+            IO.QueueUserWorkItem(_ =>
             {
                 try
                 {
-                    var (stdout, stderr) = CommandRunner.Run(this.command, e.FilePath);
+                    var (stdout, stderr) = IO.RunProcess(this.command, e.FilePath);
                     Log(stdout);
                     Log(stderr);
                 }
@@ -111,6 +114,9 @@ namespace RunOnSave
 
         private static void Log(string message)
         {
+            if (string.IsNullOrEmpty(message))
+                return;
+
             var trimmed = message.Trim();
             if (trimmed.Length > 0)
             {

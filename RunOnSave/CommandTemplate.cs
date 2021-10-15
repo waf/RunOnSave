@@ -1,6 +1,8 @@
 ﻿using EditorConfig.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace RunOnSave
@@ -9,7 +11,7 @@ namespace RunOnSave
     /// Command configuration read from .onsaveconfig.
     /// The .onsaveconfig file format is the same as .editorconfig, and accepts the keys defined in this class.
     /// </summary>
-    internal class CommandConfiguration
+    public sealed class CommandTemplate
     {
         public const string FileName = ".onsaveconfig";
 
@@ -28,27 +30,50 @@ namespace RunOnSave
         public bool ShouldIgnore => string.IsNullOrWhiteSpace(Command)
             || ignoreValues.Contains(Command, StringComparer.OrdinalIgnoreCase);
 
-        public static bool TryParse(FileConfiguration configuration, out CommandConfiguration parsed)
+        public ProcessStartInfo ToProcessStartInfo(string filePath)
         {
-            if (!configuration.Properties.TryGetValue(CommandKey, out string command))
+            string arguments = Arguments;
+            if (arguments != null)
+            {
+                arguments = arguments
+                    .Replace("{file}", filePath)
+                    .Replace("{filename}", Path.GetFileName(filePath))
+                    .Replace("{directory}", Path.GetDirectoryName(filePath));
+            }
+
+            return new ProcessStartInfo
+            {
+                FileName = Command,
+                Arguments = arguments,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                WorkingDirectory = WorkingDirectory ?? Path.GetDirectoryName(filePath)
+            };
+        }
+
+        public static bool TryParse(IReadOnlyDictionary<string, string> configuration, out CommandTemplate parsed)
+        {
+            if (!configuration.TryGetValue(CommandKey, out string command))
             {
                 parsed = null;
                 return false;
             }
 
-            var config = new CommandConfiguration { Command = command };
+            var config = new CommandTemplate { Command = command };
 
-            if (configuration.Properties.TryGetValue(ArgumentsKey, out string argumentTemplate))
+            if (configuration.TryGetValue(ArgumentsKey, out string argumentTemplate))
             {
                 config.Arguments = argumentTemplate;
             }
 
-            if (configuration.Properties.TryGetValue(WorkingDirectoryKey, out string workingDirectory))
+            if (configuration.TryGetValue(WorkingDirectoryKey, out string workingDirectory))
             {
                 config.WorkingDirectory = workingDirectory;
             }
 
-            if (configuration.Properties.TryGetValue(TimeoutKey, out string timeout)
+            if (configuration.TryGetValue(TimeoutKey, out string timeout)
                 && int.TryParse(timeout, out int seconds))
             {
                 config.Timeout = TimeSpan.FromSeconds(seconds);

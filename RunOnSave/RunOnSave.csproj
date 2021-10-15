@@ -45,8 +45,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CommandConfiguration.cs" />
-    <Compile Include="CommandRunner.cs" />
+    <Compile Include="CommandTemplate.cs" />
+    <Compile Include="ProcessRunner.cs" />
+    <Compile Include="InputOutput.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="TextViewCreationListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
