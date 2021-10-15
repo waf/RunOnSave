@@ -45,6 +45,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CommandConfiguration.cs" />
+    <Compile Include="CommandRunner.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="TextViewCreationListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -61,6 +63,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="editorconfig">
+      <Version>0.12.2</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.0-previews-4-31709-430" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5232" />
   </ItemGroup>

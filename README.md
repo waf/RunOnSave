@@ -1,6 +1,36 @@
 Visual Studio Extension: Run On Save
 ====================================
 
-A simple Visual Studio extension that calls [dotnet-csharpier](https://github.com/belav/csharpier) on C# files, whenever they're saved in visual studio.
+A simple Visual Studio extension that runs a command (i.e. a command line application), whenever a file is saved in Visual Studio.
 
-Right now, it's hard-coded to run dotnet-csharpier, though it shouldn't be too hard to parameterize it to run other command line applications too, maybe via a configuration file that can be version controlled?
+The command to be run is specified in a `.onsaveconfig` file, which has the same syntax and behavior as [.editorconfig files](https://editorconfig.org/).
+
+Here's an example `.onsaveconfig` file that calls [dotnet-csharpier](https://github.com/belav/csharpier) on C# files:
+
+```ini
+# run dotnet csharpier on C# files, whenever they're saved.
+[*.cs]
+command = dotnet
+arguments = csharpier {file}
+```
+
+The following options are supported:
+
+- **command** - the command to run. It should be either fully qualified or available on the Path environment variable.
+- **arguments** - the arguments to supply to the command. It supports the following placeholders:
+  - `{file}` - The fully qualifed file that was saved (e.g. C:\Foo\Bar.cs)
+  - `{filename}` - The file name only (e.g. Bar.cs)
+  - `{directory}` - The directory only (e.g. C:\Foo)
+- **working_directory** - The working directory to run the command in. Defaults to the directory of the file that was saved.
+- **timeout_seconds** - How long to wait for the command to finish. Defaults to 30 seconds.
+
+Similar to `.editorconfig`, specific files can be ignored by setting the command to `unset` or `ignore`:
+
+```ini
+[*.cs]
+command = dotnet
+arguments = csharpier {file}
+
+[BigFile.cs]
+command = ignore
+```

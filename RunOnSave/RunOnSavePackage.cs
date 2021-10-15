@@ -1,4 +1,5 @@
-﻿using EnvDTE80;
+﻿using EditorConfig.Core;
+using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
@@ -34,6 +35,7 @@ namespace RunOnSave
         /// RunOnSavePackage GUID string.
         /// </summary>
         public const string PackageGuidString = "b6f7ec6a-e985-4805-9562-18af25cd2c81";
+        internal static EditorConfigParser Parser { get; set; }
 
         #region Package Members
 

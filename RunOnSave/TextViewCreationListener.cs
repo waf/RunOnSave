@@ -1,13 +1,12 @@
-﻿using Microsoft.VisualStudio.Editor;
+﻿using EditorConfig.Core;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using System;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
 
 namespace RunOnSave
@@ -17,17 +16,17 @@ namespace RunOnSave
     /// Heavily based on the Visual Studio extension for sass compilation here: https://github.com/madskristensen/WebCompiler
     /// </summary>
     [Export(typeof(IVsTextViewCreationListener))]
-    [ContentType("CSharp")]
+    [ContentType("Any")]
     [Name("run on save text view handler")]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
     internal class TextViewCreationListener : IVsTextViewCreationListener
     {
         private ITextDocument _document;
         private ITextSnapshot previousSnapshot;
+        private CommandConfiguration command;
 
         [Import] public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService { get; set; }
         [Import] public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
-
 
         public void VsTextViewCreated(IVsTextView textViewAdapter)
         {
@@ -35,11 +34,34 @@ namespace RunOnSave
 
             if (TextDocumentFactoryService.TryGetTextDocument(textView.TextDataModel.DocumentBuffer, out _document))
             {
-                _document.FileActionOccurred += DocumentSaved;
+                ThreadPool.QueueUserWorkItem(_ =>
+                {
+                    var fileConfiguration = new EditorConfigParser(CommandConfiguration.FileName).Parse(_document.FilePath);
+
+                    if (fileConfiguration is null || fileConfiguration.Properties.Count == 0)
+                    {
+                        return;
+                    }
+
+                    if(!CommandConfiguration.TryParse(fileConfiguration, out var command))
+                    {
+                        Logger.Log($"{CommandConfiguration.FileName} found, but invalid for this file. Skipping.");
+                        return;
+                    }
+
+                    if (command.ShouldIgnore)
+                    {
+                        return;
+                    }
+
+                    this.command = command;
+                    _document.FileActionOccurred += DocumentSaved;
+                });
             }
 
             textView.Closed += TextViewClosed;
         }
+        
 
         private void TextViewClosed(object sender, EventArgs e)
         {
@@ -76,7 +98,9 @@ namespace RunOnSave
             {
                 try
                 {
-                    RunCSharpier(e.FilePath);
+                    var (stdout, stderr) = CommandRunner.Run(this.command, e.FilePath);
+                    Log(stdout);
+                    Log(stderr);
                 }
                 catch (Exception ex)
                 {
@@ -85,47 +109,13 @@ namespace RunOnSave
             });
         }
 
-        private static void RunCSharpier(string filePath)
+        private static void Log(string message)
         {
-            var output = new StringBuilder();
-            var error = new StringBuilder();
-
-            var processStartInfo = new ProcessStartInfo
+            var trimmed = message.Trim();
+            if (trimmed.Length > 0)
             {
-                FileName = "dotnet-csharpier.exe",
-                Arguments = filePath,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                WorkingDirectory = Path.GetDirectoryName(filePath)
-            };
-
-            using (var process = new Process() { StartInfo = processStartInfo })
-            {
-                process.OutputDataReceived += (_, args) => output.AppendLine(args.Data);
-                process.ErrorDataReceived += (_, args) =>  error.AppendLine(args.Data);
-
-                process.Start();
-                process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
-                process.WaitForExit();
-                process.Close();
+                Logger.Log(trimmed);
             }
-
-            if (output.Length > 0)
-            {
-                Logger.Log(TerminalOutputToVisualStudioOutput(output.ToString()));
-            }
-            if (error.Length > 0)
-            {
-                Logger.Log(TerminalOutputToVisualStudioOutput(error.ToString()));
-            }
-        }
-
-        private static string TerminalOutputToVisualStudioOutput(string output)
-        {
-            return string.Join(" ", output.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
         }
     }
 }

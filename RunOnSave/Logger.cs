@@ -37,7 +37,7 @@ namespace RunOnSave
                         }
                     }
 
-                    _pane?.OutputStringThreadSafe(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
+                    _pane?.OutputStringThreadSafe(message + Environment.NewLine);
                 }
                 catch
                 {
@@ -46,12 +46,7 @@ namespace RunOnSave
             });
         }
 
-        public static void Log(Exception ex)
-        {
-            if (ex != null)
-            {
-                Log(ex.ToString());
-            }
-        }
+        public static void Log(Exception ex) =>
+            Log("Exception: " + ex.ToString());
     }
 }
