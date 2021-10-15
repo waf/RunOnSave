@@ -1,7 +1,7 @@
 Visual Studio Extension: Run On Save
 ====================================
 
-A simple Visual Studio extension that runs a command (i.e. a command line application), whenever a file is saved in Visual Studio.
+A simple Visual Studio extension that runs a command (i.e. a command line application), whenever a file is saved in Visual Studio. Available for free on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=WillFuqua.RunOnSave).
 
 The command to be run is specified in a `.onsaveconfig` file, which has the same syntax and behavior as [.editorconfig files](https://editorconfig.org/).
 
@@ -34,3 +34,5 @@ arguments = csharpier {file}
 [BigFile.cs]
 command = ignore
 ```
+
+Logo by [icons8](https://www.visualpharm.com/free-icons/save-595b40b85ba036ed117da9ec).
