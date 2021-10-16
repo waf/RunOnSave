@@ -4,6 +4,9 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace RunOnSave
 {
+    /// <summary>
+    /// Logger that logs to the Visual Studio Output Window.
+    /// </summary>
     public static class Logger
     {
         private static IVsOutputWindow _output;

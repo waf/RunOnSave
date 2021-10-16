@@ -4,6 +4,9 @@ using System.Threading;
 
 namespace RunOnSave
 {
+    /// <summary>
+    /// Layer of indirection for IO operations, mostly for mocking / testing purposes.
+    /// </summary>
     public interface IInputOutput
     {
         void QueueUserWorkItem(WaitCallback callBack);
@@ -11,6 +14,9 @@ namespace RunOnSave
         (string stdout, string stderr) RunProcess(CommandTemplate command, string filePath);
     }
 
+    /// <summary>
+    /// Concrete implementation of <see cref="IInputOutput"/> that actually does Input/Output.
+    /// </summary>
     internal class InputOutput : IInputOutput
     {
         public IReadOnlyDictionary<string, string> ReadConfigFile(string filepath) =>

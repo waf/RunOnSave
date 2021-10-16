@@ -1,5 +1,4 @@
-﻿using EditorConfig.Core;
-using Microsoft.VisualStudio.Editor;
+﻿using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -7,13 +6,12 @@ using Microsoft.VisualStudio.Utilities;
 using System;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Threading;
 
 namespace RunOnSave
 {
     /// <summary>
-    /// When you open a C# file in Visual Studio, this implementation is called, and will execute dotnet-csharpier on save.
-    /// Heavily based on the Visual Studio extension for sass compilation here: https://github.com/madskristensen/WebCompiler
+    /// When you open a C# file in Visual Studio, this implementation is called, and will execute a command on save.
+    /// Heavily based on the Visual Studio extension for SASS compilation here: https://github.com/madskristensen/WebCompiler
     /// </summary>
     [Export(typeof(IVsTextViewCreationListener))]
     [ContentType("Any")]
@@ -114,14 +112,12 @@ namespace RunOnSave
 
         private static void Log(string message)
         {
+            message = message?.Trim();
+
             if (string.IsNullOrEmpty(message))
                 return;
 
-            var trimmed = message.Trim();
-            if (trimmed.Length > 0)
-            {
-                Logger.Log(trimmed);
-            }
+            Logger.Log(message);
         }
     }
 }
