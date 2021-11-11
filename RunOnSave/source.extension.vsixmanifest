@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="RunOnSave.7de8e627-4e33-4425-84ba-cc028ada1ca0" Version="1.0" Language="en-US" Publisher="Will Fuqua" />
+        <Identity Id="RunOnSave.7de8e627-4e33-4425-84ba-cc028ada1ca0" Version="1.1" Language="en-US" Publisher="Will Fuqua" />
         <DisplayName>RunOnSave</DisplayName>
         <Description xml:space="preserve">A Visual Studio extension that can run commands on files when they're saved. Configured using an .onsaveconfig file, which can be checked into version control.</Description>
         <MoreInfo>https://github.com/waf/RunOnSave/</MoreInfo>

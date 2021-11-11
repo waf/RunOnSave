@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using System;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.IO;
 
@@ -19,6 +20,8 @@ namespace RunOnSave
     [TextViewRole(PredefinedTextViewRoles.Editable)]
     public sealed class TextViewCreationListener : IVsTextViewCreationListener
     {
+        public const int FileNotFoundWin32ExceptionCode = 0x2;
+
         private ITextDocument document;
         private ITextSnapshot previousSnapshot;
         private CommandTemplate command;
@@ -102,6 +105,12 @@ namespace RunOnSave
                     var (stdout, stderr) = IO.RunProcess(this.command, e.FilePath);
                     Log(stdout);
                     Log(stderr);
+                }
+                catch (Win32Exception win32) when (win32.NativeErrorCode == FileNotFoundWin32ExceptionCode)
+                {
+                    Logger.Log(
+                        $"Unable to find the command '{this.command.Command}'. Please ensure the command is correct, including any file extension."
+                    );
                 }
                 catch (Exception ex)
                 {
