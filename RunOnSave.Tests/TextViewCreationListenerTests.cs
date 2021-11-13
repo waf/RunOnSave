@@ -78,7 +78,7 @@ namespace RunOnSave.Tests
         }
 
         [TestMethod]
-        public void TextViewCreationListener_IgnoredFileOpenedAndSaves_DoesNotRunsProcess()
+        public void TextViewCreationListener_IgnoredFileOpenedAndSaves_DoesNotRunProcess()
         {
             const string OpenedFile = @"C:\repos\Foo.cs";
 
