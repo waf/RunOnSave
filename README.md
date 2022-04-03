@@ -23,6 +23,7 @@ The following options are supported:
   - `{directory}` - The directory only (e.g. C:\Foo)
 - **working_directory** - The working directory to run the command in. Defaults to the directory of the file that was saved.
 - **timeout_seconds** - How long to wait for the command to finish. Defaults to 30 seconds.
+- **always_run** - by default, RunOnSave only runs the command when the input file has changed (so repeatedly pressing ctrl-s will only call the command once). Set this to `true` to disable this behavior, so the command will always run. This may be required if you have additional extensions that also modify the file on save.
 
 Similar to `.editorconfig`, specific files can be ignored by setting the command to `unset` or `ignore`:
 
