@@ -92,7 +92,7 @@ namespace RunOnSave
             if (!this.command.AlwaysRun &&
                 previousSnapshot == this.document.TextBuffer.CurrentSnapshot)
             {
-                Logger.Log("Skipping command -- file not changed");
+                Logger.Log("Skipping command because the file is not changed. Configure \"always_run\" to change this behavior.");
                 return;
             }
 
