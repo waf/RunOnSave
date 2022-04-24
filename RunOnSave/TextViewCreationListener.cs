@@ -64,12 +64,11 @@ namespace RunOnSave
                 this.command = cmd;
                 this.document.FileActionOccurred += DocumentSaved;
             });
-
         }
 
         private void TextViewClosed(object sender, EventArgs e)
         {
-            if(this.document != null)
+            if (this.document != null)
             {
                 this.document.FileActionOccurred -= DocumentSaved;
             }
@@ -89,10 +88,11 @@ namespace RunOnSave
             if (string.IsNullOrEmpty(e.FilePath) || !Path.IsPathRooted(e.FilePath))
                 return;
 
-            // don't bother reformatting if the file hasn't been changed.
-            if (previousSnapshot == this.document.TextBuffer.CurrentSnapshot)
+            // don't call the command if the file hasn't changed, unless always_run is specified by user.
+            if (!this.command.AlwaysRun &&
+                previousSnapshot == this.document.TextBuffer.CurrentSnapshot)
             {
-                Logger.Log("Skipping formatting -- file not changed");
+                Logger.Log("Skipping command because the file is not changed. Configure \"always_run\" to change this behavior.");
                 return;
             }
 

@@ -24,32 +24,43 @@ namespace RunOnSave
             if (string.IsNullOrEmpty(message))
                 return;
 
-            ThreadHelper.JoinableTaskFactory.Run(async () =>
+            try
             {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                try
+                ThreadHelper.JoinableTaskFactory.Run(async () =>
                 {
-                    if (_pane == null)
-                    {
-                        Guid guid = Guid.NewGuid();
-                        if(_output != null)
-                        {
-                            _output.CreatePane(ref guid, _name, 1, 1);
-                            _output.GetPane(ref guid, out _pane);
-                        }
-                    }
-
-                    _pane?.OutputStringThreadSafe(message + Environment.NewLine);
-                }
-                catch
-                {
-                    // Do nothing
-                }
-            });
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    LogToOutputWindow(message);
+                });
+            }
+            catch
+            {
+                // this only throws in unit tests where the threading model is different.
+            }
         }
 
         public static void Log(Exception ex) =>
             Log("Exception: " + ex.ToString());
+
+        private static void LogToOutputWindow(string message)
+        {
+            try
+            {
+                if (_pane == null)
+                {
+                    Guid guid = Guid.NewGuid();
+                    if (_output != null)
+                    {
+                        _output.CreatePane(ref guid, _name, 1, 1);
+                        _output.GetPane(ref guid, out _pane);
+                    }
+                }
+
+                _pane?.OutputStringThreadSafe(message + Environment.NewLine);
+            }
+            catch
+            {
+                // Do nothing
+            }
+        }
     }
 }

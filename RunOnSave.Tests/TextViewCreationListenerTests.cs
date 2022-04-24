@@ -127,6 +127,61 @@ namespace RunOnSave.Tests
             Assert.IsNull(process);
         }
 
+        [DataTestMethod]
+        [DataRow(/* always_run = */ "true", 2)]
+        [DataRow(/* always_run = */ "false", 1)]
+        public void TextViewCreationListener_AlwaysRunOptionIsConfigured_RunsExpectedTimes(string alwaysRunValue, int expectedCommandCalls)
+        {
+            const string OpenedFile = @"C:\repos\Foo.cs";
+
+            var textViewCreationListener = new TextViewCreationListener
+            {
+                IO = IO,
+                EditorAdaptersFactoryService = Substitute.For<IVsEditorAdaptersFactoryService>(),
+                TextDocumentFactoryService = Substitute.For<ITextDocumentFactoryService>(),
+            };
+
+            // set up the values read from the .onsaveconfig
+            textViewCreationListener.IO
+                .ReadConfigFile(OpenedFile)
+                .Returns(new Dictionary<string, string>
+                {
+                    ["command"] = "dotnet",
+                    ["arguments"] = "csharpier {file}",
+                    ["always_run"] = alwaysRunValue,
+                });
+
+            var textView = Substitute.For<IVsTextView>();
+            var document = Substitute.For<ITextDocument>();
+            document.FilePath.Returns(OpenedFile);
+
+            StubVisualStudioServices(textViewCreationListener, textView, document);
+
+            // capture the process info that will be run, so we can assert on it.
+            ProcessStartInfo process = null;
+            textViewCreationListener.IO
+                .WhenForAnyArgs(io => io.RunProcess(default, default))
+                .Do(cb =>
+                {
+                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.Arg<string>());
+                });
+
+            // system under test -- file opened
+            textViewCreationListener.VsTextViewCreated(textView);
+
+            // system under test -- file saved twice
+            document.FileActionOccurred += Raise.EventWith(
+                new object(),
+                new TextDocumentFileActionEventArgs(OpenedFile, DateTime.Now, FileActionTypes.ContentSavedToDisk)
+            );
+            document.FileActionOccurred += Raise.EventWith(
+                new object(),
+                new TextDocumentFileActionEventArgs(OpenedFile, DateTime.Now, FileActionTypes.ContentSavedToDisk)
+            );
+
+            textViewCreationListener.IO.ReceivedWithAnyArgs(expectedCommandCalls).RunProcess(default, default);
+        }
+
         private static void StubVisualStudioServices(TextViewCreationListener textViewCreationListener, IVsTextView textView, ITextDocument document)
         {
             var wpfTextView = Substitute.For<IWpfTextView>();

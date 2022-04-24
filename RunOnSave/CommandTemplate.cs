@@ -19,6 +19,7 @@ namespace RunOnSave
         private const string ArgumentsKey = "arguments";
         private const string WorkingDirectoryKey = "working_directory";
         private const string TimeoutKey = "timeout_seconds";
+        private const string AlwaysRunKey = "always_run";
 
         private readonly IReadOnlyList<string> ignoreValues = new[] { "ignore", "unset" };
 
@@ -50,6 +51,8 @@ namespace RunOnSave
         /// </summary>
         public bool ShouldIgnore => string.IsNullOrWhiteSpace(Command)
             || ignoreValues.Contains(Command, StringComparer.OrdinalIgnoreCase);
+
+        public bool AlwaysRun { get; private set; } = false;
 
         /// <summary>
         /// Fills in the current CommandTemplate, creating a ProcessStartInfo.
@@ -100,6 +103,12 @@ namespace RunOnSave
             if (configuration.TryGetValue(WorkingDirectoryKey, out string workingDirectory))
             {
                 config.WorkingDirectory = workingDirectory;
+            }
+
+            if (configuration.TryGetValue(AlwaysRunKey, out string alwaysRunValue)
+                && bool.TryParse(alwaysRunValue, out bool alwaysRun))
+            {
+                config.AlwaysRun = alwaysRun;
             }
 
             if (configuration.TryGetValue(TimeoutKey, out string timeout)
