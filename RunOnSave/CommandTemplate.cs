@@ -66,7 +66,9 @@ namespace RunOnSave
                 arguments = arguments
                     .Replace("{file}", filePath)
                     .Replace("{filename}", Path.GetFileName(filePath))
-                    .Replace("{directory}", Path.GetDirectoryName(filePath));
+                    .Replace("{directory}", Path.GetDirectoryName(filePath))
+                    .Replace("{file_in_solution}", MakePathRelativeToDirectory(filePath, Environment.CurrentDirectory))
+                    .Replace("{solution_directory}", Environment.CurrentDirectory);
             }
 
             return new ProcessStartInfo
@@ -79,6 +81,14 @@ namespace RunOnSave
                 RedirectStandardError = true,
                 WorkingDirectory = WorkingDirectory ?? Path.GetDirectoryName(filePath)
             };
+        }
+
+        private static string MakePathRelativeToDirectory(string filePath, string directory)
+        {
+            // directory must end in trailing slash for Uri.MakeRelativeUri to behave correctly
+            var directoryUri = new Uri(directory.Last() == Path.DirectorySeparatorChar ? directory : directory + Path.DirectorySeparatorChar);
+            var relativePath = directoryUri.MakeRelativeUri(new Uri(filePath)).ToString();
+            return Uri.UnescapeDataString(relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar));
         }
 
         /// <summary>

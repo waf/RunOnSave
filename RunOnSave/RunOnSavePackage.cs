@@ -34,7 +34,6 @@ namespace RunOnSave
         /// RunOnSavePackage GUID string.
         /// </summary>
         public const string PackageGuidString = "b6f7ec6a-e985-4805-9562-18af25cd2c81";
-        internal static EditorConfigParser Parser { get; set; }
 
         #region Package Members
 

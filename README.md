@@ -18,9 +18,11 @@ The following options are supported:
 
 - **command** - the command to run. It should be either fully qualified or available on the Path environment variable. For `.cmd` and `.bat` files, make sure the file extension is included in the command.
 - **arguments** - the arguments to supply to the command. It supports the following placeholders:
-  - `{file}` - The fully qualifed file that was saved (e.g. C:\Foo\Bar.cs)
-  - `{filename}` - The file name only (e.g. Bar.cs)
-  - `{directory}` - The directory only (e.g. C:\Foo)
+  - `{file}` - The file that was saved, fully qualified (e.g. C:\MySolution\MyProject\Program.cs)
+  - `{file_in_solution}` - The file that was saved, relative to the solution_directory (e.g. MyProject\Program.cs)
+  - `{filename}` - The file name of the file that was saved (e.g. Program.cs)
+  - `{directory}` - The directory containing the file that was saved (e.g. C:\MySolution\MyProject)
+  - `{solution_directory}` - The directory of the solution file (e.g. C:\MySolution)
 - **working_directory** - The working directory to run the command in. Defaults to the directory of the file that was saved.
 - **timeout_seconds** - How long to wait for the command to finish. Defaults to 30 seconds.
 - **always_run** - by default, RunOnSave only runs the command when the input file has changed (so repeatedly pressing ctrl-s will only call the command once). Set this to `true` to disable this behavior, so the command will always run. This may be required if you have additional extensions that also modify the file on save.
