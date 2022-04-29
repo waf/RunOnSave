@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using System.Threading;
 using System.Diagnostics;
+using System.IO;
 
 namespace RunOnSave.Tests
 {
@@ -75,6 +76,58 @@ namespace RunOnSave.Tests
             Assert.AreEqual(@"dotnet", process.FileName);
             Assert.AreEqual(@"csharpier C:\repos\Foo.cs", process.Arguments);
             Assert.AreEqual(@"C:\repos", process.WorkingDirectory);
+        }
+
+        [TestMethod]
+        public void TextViewCreationListener_SolutionRelativeFilePaths_FillsPlaceholders()
+        {
+            string solutionRoot = Environment.CurrentDirectory;
+            string openedFile = Path.Combine(solutionRoot, @"MyProject\Program.cs");
+
+            var textViewCreationListener = new TextViewCreationListener
+            {
+                IO = IO,
+                EditorAdaptersFactoryService = Substitute.For<IVsEditorAdaptersFactoryService>(),
+                TextDocumentFactoryService = Substitute.For<ITextDocumentFactoryService>(),
+            };
+
+            // set up the values read from the .onsaveconfig
+            textViewCreationListener.IO
+                .ReadConfigFile(openedFile)
+                .Returns(new Dictionary<string, string>
+                {
+                    ["command"] = "jb",
+                    ["arguments"] = @"cleanupcode --profile=""Built-in: Reformat Code"" --include=""{file_in_solution}"" {solution_directory}\MySolution.sln",
+                });
+
+            var textView = Substitute.For<IVsTextView>();
+            var document = Substitute.For<ITextDocument>();
+            document.FilePath.Returns(openedFile);
+
+            StubVisualStudioServices(textViewCreationListener, textView, document);
+
+            // capture the process info that will be run, so we can assert on it.
+            ProcessStartInfo process = null;
+            textViewCreationListener.IO
+                .WhenForAnyArgs(io => io.RunProcess(default, default))
+                .Do(cb =>
+                {
+                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.Arg<string>());
+                });
+
+            // system under test -- file opened
+            textViewCreationListener.VsTextViewCreated(textView);
+
+            // system under test -- file saved
+            document.FileActionOccurred += Raise.EventWith(
+                new object(),
+                new TextDocumentFileActionEventArgs(openedFile, DateTime.Now, FileActionTypes.ContentSavedToDisk)
+            );
+
+            textViewCreationListener.IO.ReceivedWithAnyArgs(1).RunProcess(default, default);
+
+            Assert.AreEqual(@"jb", process.FileName);
+            Assert.AreEqual($@"cleanupcode --profile=""Built-in: Reformat Code"" --include=""MyProject\Program.cs"" {solutionRoot}\MySolution.sln", process.Arguments);
         }
 
         [TestMethod]
