@@ -56,10 +56,10 @@ namespace RunOnSave.Tests
             // capture the process info that will be run, so we can assert on it.
             ProcessStartInfo process = null;
             textViewCreationListener.IO
-                .WhenForAnyArgs(io => io.RunProcess(default, default))
+                .WhenForAnyArgs(io => io.RunProcess(default, default, default))
                 .Do(cb =>
                 {
-                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.Arg<string>());
+                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.ArgAt<string>(1), cb.ArgAt<string>(2));
                 });
 
             // system under test -- file opened
@@ -71,7 +71,7 @@ namespace RunOnSave.Tests
                 new TextDocumentFileActionEventArgs(OpenedFile, DateTime.Now, FileActionTypes.ContentSavedToDisk)
             );
 
-            textViewCreationListener.IO.ReceivedWithAnyArgs(1).RunProcess(default, default);
+            textViewCreationListener.IO.ReceivedWithAnyArgs(1).RunProcess(default, default, default);
 
             Assert.AreEqual(@"dotnet", process.FileName);
             Assert.AreEqual(@"csharpier C:\repos\Foo.cs", process.Arguments);
@@ -109,10 +109,10 @@ namespace RunOnSave.Tests
             // capture the process info that will be run, so we can assert on it.
             ProcessStartInfo process = null;
             textViewCreationListener.IO
-                .WhenForAnyArgs(io => io.RunProcess(default, default))
+                .WhenForAnyArgs(io => io.RunProcess(default, default, default))
                 .Do(cb =>
                 {
-                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.Arg<string>());
+                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.ArgAt<string>(1), cb.ArgAt<string>(2));
                 });
 
             // system under test -- file opened
@@ -124,7 +124,7 @@ namespace RunOnSave.Tests
                 new TextDocumentFileActionEventArgs(openedFile, DateTime.Now, FileActionTypes.ContentSavedToDisk)
             );
 
-            textViewCreationListener.IO.ReceivedWithAnyArgs(1).RunProcess(default, default);
+            textViewCreationListener.IO.ReceivedWithAnyArgs(1).RunProcess(default, default, default);
 
             Assert.AreEqual(@"jb", process.FileName);
             Assert.AreEqual($@"cleanupcode --profile=""Built-in: Reformat Code"" --include=""MyProject\Program.cs"" {solutionRoot}\MySolution.sln", process.Arguments);
@@ -160,10 +160,10 @@ namespace RunOnSave.Tests
             // capture the process info that will be run, so we can assert on it.
             ProcessStartInfo process = null;
             textViewCreationListener.IO
-                .WhenForAnyArgs(io => io.RunProcess(default, default))
+                .WhenForAnyArgs(io => io.RunProcess(default, default, default))
                 .Do(cb =>
                 {
-                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.Arg<string>());
+                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.ArgAt<string>(1), cb.ArgAt<string>(2));
                 });
 
             // system under test -- file opened
@@ -175,7 +175,7 @@ namespace RunOnSave.Tests
                 new TextDocumentFileActionEventArgs(OpenedFile, DateTime.Now, FileActionTypes.ContentSavedToDisk)
             );
 
-            textViewCreationListener.IO.DidNotReceiveWithAnyArgs().RunProcess(default, default);
+            textViewCreationListener.IO.DidNotReceiveWithAnyArgs().RunProcess(default, default, default);
 
             Assert.IsNull(process);
         }
@@ -213,10 +213,10 @@ namespace RunOnSave.Tests
             // capture the process info that will be run, so we can assert on it.
             ProcessStartInfo process = null;
             textViewCreationListener.IO
-                .WhenForAnyArgs(io => io.RunProcess(default, default))
+                .WhenForAnyArgs(io => io.RunProcess(default, default, default))
                 .Do(cb =>
                 {
-                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.Arg<string>());
+                    process = cb.Arg<CommandTemplate>().ToProcessStartInfo(cb.ArgAt<string>(1), cb.ArgAt<string>(2));
                 });
 
             // system under test -- file opened
@@ -232,7 +232,7 @@ namespace RunOnSave.Tests
                 new TextDocumentFileActionEventArgs(OpenedFile, DateTime.Now, FileActionTypes.ContentSavedToDisk)
             );
 
-            textViewCreationListener.IO.ReceivedWithAnyArgs(expectedCommandCalls).RunProcess(default, default);
+            textViewCreationListener.IO.ReceivedWithAnyArgs(expectedCommandCalls).RunProcess(default, default, default);
         }
 
         private static void StubVisualStudioServices(TextViewCreationListener textViewCreationListener, IVsTextView textView, ITextDocument document)

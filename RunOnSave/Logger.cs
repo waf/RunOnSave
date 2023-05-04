@@ -9,13 +9,14 @@ namespace RunOnSave
     /// </summary>
     public static class Logger
     {
+        private static IServiceProvider _serviceProvider;
         private static IVsOutputWindow _output;
         private static IVsOutputWindowPane _pane;
         private static string _name;
 
-        public static void Initialize(IVsOutputWindow output, string name)
+        public static void Initialize(IServiceProvider serviceProvider, string name)
         {
-            _output = output;
+            _serviceProvider = serviceProvider;
             _name = name;
         }
 
@@ -45,21 +46,21 @@ namespace RunOnSave
         {
             try
             {
+                ThreadHelper.ThrowIfNotOnUIThread();
+
                 if (_pane == null)
                 {
-                    Guid guid = Guid.NewGuid();
-                    if (_output != null)
-                    {
-                        _output.CreatePane(ref guid, _name, 1, 1);
-                        _output.GetPane(ref guid, out _pane);
-                    }
+                    _output ??= _serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
+                    var guid = Guid.NewGuid();
+                    _output.CreatePane(ref guid, _name, 1, 1);
+                    _output.GetPane(ref guid, out _pane);
                 }
 
                 _pane?.OutputStringThreadSafe(message + Environment.NewLine);
             }
             catch
             {
-                // Do nothing
+                // Do nothing, error logging shouldn't throw errors!
             }
         }
     }

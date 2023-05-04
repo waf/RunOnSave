@@ -1,4 +1,7 @@
-﻿using Microsoft.VisualStudio.Editor;
+﻿using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -22,6 +25,7 @@ namespace RunOnSave
     {
         public const int FileNotFoundWin32ExceptionCode = 0x2;
 
+        private string solutionFilePath;
         private ITextDocument document;
         private ITextSnapshot previousSnapshot;
         private CommandTemplate command;
@@ -40,6 +44,8 @@ namespace RunOnSave
             {
                 return;
             }
+
+            solutionFilePath ??= RunOnSavePackage.GetSolutionDirectory() ?? Environment.CurrentDirectory;
 
             IO.QueueUserWorkItem(_ =>
             {
@@ -102,7 +108,7 @@ namespace RunOnSave
             {
                 try
                 {
-                    var (stdout, stderr) = IO.RunProcess(this.command, e.FilePath);
+                    var (stdout, stderr) = IO.RunProcess(this.command, this.solutionFilePath, e.FilePath);
                     Log(stdout);
                     Log(stderr);
                 }

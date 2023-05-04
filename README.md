@@ -16,7 +16,8 @@ arguments = csharpier {file}
 
 The following options are supported:
 
-- **command** - the command to run. It should be either fully qualified or available on the Path environment variable. For `.cmd` and `.bat` files, make sure the file extension is included in the command.
+- **command** - the command to run. It should be either fully qualified or available on the Path environment variable. For `.cmd` and `.bat` files, make sure the file extension is included in the command. The following placeholder can be used in the command:
+  - `{solution_directory}` - The directory of the solution file (e.g. C:\MySolution)
 - **arguments** - the arguments to supply to the command. It supports the following placeholders:
   - `{file}` - The file that was saved, fully qualified (e.g. C:\MySolution\MyProject\Program.cs)
   - `{file_in_solution}` - The file that was saved, relative to the solution_directory (e.g. MyProject\Program.cs)

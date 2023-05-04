@@ -11,7 +11,7 @@ namespace RunOnSave
     {
         void QueueUserWorkItem(WaitCallback callBack);
         IReadOnlyDictionary<string, string> ReadConfigFile(string filepath);
-        (string stdout, string stderr) RunProcess(CommandTemplate command, string filePath);
+        (string stdout, string stderr) RunProcess(CommandTemplate command, string solutionDirectory, string filePath);
     }
 
     /// <summary>
@@ -25,7 +25,7 @@ namespace RunOnSave
         public void QueueUserWorkItem(WaitCallback callBack) =>
             ThreadPool.QueueUserWorkItem(callBack);
 
-        public (string stdout, string stderr) RunProcess(CommandTemplate command, string filePath) =>
-            ProcessRunner.Run(command, filePath);
+        public (string stdout, string stderr) RunProcess(CommandTemplate command, string solutionDirectory, string filePath) =>
+            ProcessRunner.Run(command, solutionDirectory, filePath);
     }
 }

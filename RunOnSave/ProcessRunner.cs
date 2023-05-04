@@ -6,9 +6,9 @@ namespace RunOnSave
 {
     internal class ProcessRunner
     {
-        public static (string stdout, string stderr) Run(CommandTemplate command, string filePath)
+        public static (string stdout, string stderr) Run(CommandTemplate command, string solutionDirectory, string filePath)
         {
-            var processStartInfo = command.ToProcessStartInfo(filePath);
+            var processStartInfo = command.ToProcessStartInfo(solutionDirectory, filePath);
 
             var output = new StringBuilder($"{DateTime.Now:s}: running {processStartInfo.FileName} {processStartInfo.Arguments}" + Environment.NewLine);
             var error = new StringBuilder();

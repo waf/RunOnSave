@@ -58,7 +58,7 @@ namespace RunOnSave
         /// Fills in the current CommandTemplate, creating a ProcessStartInfo.
         /// This can then be passed to System.Diagnostics.Process.
         /// </summary>
-        public ProcessStartInfo ToProcessStartInfo(string filePath)
+        public ProcessStartInfo ToProcessStartInfo(string solutionDirectory, string filePath)
         {
             string arguments = ArgumentsTemplate;
             if (arguments != null)
@@ -67,13 +67,15 @@ namespace RunOnSave
                     .Replace("{file}", filePath)
                     .Replace("{filename}", Path.GetFileName(filePath))
                     .Replace("{directory}", Path.GetDirectoryName(filePath))
-                    .Replace("{file_in_solution}", MakePathRelativeToDirectory(filePath, Environment.CurrentDirectory))
-                    .Replace("{solution_directory}", Environment.CurrentDirectory);
+                    .Replace("{file_in_solution}", MakePathRelativeToDirectory(filePath, solutionDirectory))
+                    .Replace("{solution_directory}", solutionDirectory);
             }
+
+            var commandToRun = Command.Replace("{solution_directory}", solutionDirectory);
 
             return new ProcessStartInfo
             {
-                FileName = Command,
+                FileName = commandToRun,
                 Arguments = arguments,
                 CreateNoWindow = true,
                 UseShellExecute = false,

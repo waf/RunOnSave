@@ -1,4 +1,4 @@
-﻿using EditorConfig.Core;
+﻿using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
@@ -49,9 +49,23 @@ namespace RunOnSave
             // When initialized asynchronously, the current thread may be a background thread up to this point.
             // Do any initialization that requires the UI thread after switching to the Main / UI thread.
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            Logger.Initialize(this, "Run on Save");
+        }
 
-            var outputPane = await this.GetServiceAsync(typeof(SVsOutputWindow));
-            Logger.Initialize((IVsOutputWindow)outputPane, "Run on Save");
+        public static string GetSolutionDirectory()
+        {
+            try
+            {
+                ThreadHelper.ThrowIfNotOnUIThread();
+                var solution = (IVsSolution)GetGlobalService(typeof(IVsSolution));
+                return solution.GetSolutionInfo(out string solutionFilePath, out var _, out var _) == VSConstants.S_OK
+                    ? solutionFilePath.TrimEnd('\\')
+                    : null;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         #endregion
